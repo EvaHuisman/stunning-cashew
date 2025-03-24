@@ -164,8 +164,9 @@ elif st.session_state.page == "Aanwezigheid personen":
             datum = row_planning['Datum']
             tijd = row_planning['Tijd']
             beschrijving = row_planning['Beschrijving']
+            adres = row_planning['Adres']
 
-            with st.expander(f"📅 {datum} - ⏰ {tijd} - 📝 {beschrijving}"):
+            with st.expander(f"📅 {datum} - ⏰ {tijd} - 📝 {beschrijving} - 📍 {adres}"):
                 if idx_planning not in st.session_state.checkbox_checked:
                     st.session_state.checkbox_checked[idx_planning] = {}
 
