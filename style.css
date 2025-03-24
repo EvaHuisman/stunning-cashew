@@ -23,6 +23,7 @@ h1, h2, h3, h4, [data-testid=stMarkdownContainer]>h1 {
 
 [data-testid=stBaseButton-secondaryFormSubmit] {
     background-color: #182866 !important;
+    color: white;
 }
 
 [data-testid=stHeadingWithActionElements]>h1 {
