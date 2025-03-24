@@ -1,5 +1,5 @@
 /* Verander de achtergrondkleur van de pagina */
-.main {
+body, .stApp {
     background-color: #ADD5F0;
 }
 
