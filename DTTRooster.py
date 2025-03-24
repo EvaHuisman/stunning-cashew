@@ -48,28 +48,19 @@ def init_state():
             st.session_state.planning = pd.read_csv("planning.csv")
         except FileNotFoundError:
             st.session_state.planning = pd.DataFrame(columns=['Datum', 'Tijd', 'Beschrijving', 'Adres', 'Aanwezigheid'], index=None)
-    
     if 'personen' not in st.session_state:
         try:
             st.session_state.personen = pd.read_csv("personenbeheer.csv")
         except FileNotFoundError:
             st.session_state.personen = pd.DataFrame(columns=['Voornaam', 'Achternaam', 'UUID-nummer'], index=None)
-    
+    if 'page' not in st.session_state:
+        st.session_state.page = "Vrijdagrooster overzicht"  # Standaard pagina instellen
     if 'checkbox_checked' not in st.session_state:
         st.session_state.checkbox_checked = {}
 
-        # Laad de aanwezigheid van alle planningen in checkbox_checked
-        for idx, row in st.session_state.planning.iterrows():
-            aanwezigheids_count = int(row["Aanwezigheid"]) if not pd.isna(row["Aanwezigheid"]) else 0
-            st.session_state.checkbox_checked[idx] = {f"aanwezig_{nummer}": False for nummer in st.session_state.personen["UUID-nummer"]}
-
-            # Update aanwezigheid op basis van de kolom 'Aanwezigheid'
-            if aanwezigheids_count > 0:
-                # Veronderstel dat de aanwezigheid per persoon wordt opgeslagen
-                for key in st.session_state.checkbox_checked[idx].keys():
-                    st.session_state.checkbox_checked[idx][key] = True
-
 init_state()
+
+
 
 # Wachtwoordcontrole
 def password_entered():
