@@ -48,15 +48,26 @@ def init_state():
             st.session_state.planning = pd.read_csv("planning.csv")
         except FileNotFoundError:
             st.session_state.planning = pd.DataFrame(columns=['Datum', 'Tijd', 'Beschrijving', 'Adres', 'Aanwezigheid'], index=None)
+    
     if 'personen' not in st.session_state:
         try:
             st.session_state.personen = pd.read_csv("personenbeheer.csv")
         except FileNotFoundError:
             st.session_state.personen = pd.DataFrame(columns=['Voornaam', 'Achternaam', 'UUID-nummer'], index=None)
-    if 'page' not in st.session_state:
-        st.session_state.page = "Vrijdagrooster overzicht"  # Standaard pagina instellen
+    
     if 'checkbox_checked' not in st.session_state:
         st.session_state.checkbox_checked = {}
+
+        # Laad de aanwezigheid van alle planningen in checkbox_checked
+        for idx, row in st.session_state.planning.iterrows():
+            aanwezigheids_count = int(row["Aanwezigheid"]) if not pd.isna(row["Aanwezigheid"]) else 0
+            st.session_state.checkbox_checked[idx] = {f"aanwezig_{nummer}": False for nummer in st.session_state.personen["UUID-nummer"]}
+
+            # Update aanwezigheid op basis van de kolom 'Aanwezigheid'
+            if aanwezigheids_count > 0:
+                # Veronderstel dat de aanwezigheid per persoon wordt opgeslagen
+                for key in st.session_state.checkbox_checked[idx].keys():
+                    st.session_state.checkbox_checked[idx][key] = True
 
 init_state()
 
@@ -151,48 +162,80 @@ elif st.session_state.page == "Vrijdagrooster overzicht":
     csv = convert_df(st.session_state.planning)
     st.download_button("📥 Download Planning", data=csv, file_name="planning.csv", mime='text/csv')
 
+# Bestandspad voor de planning
+PLANNING_CSV = "planning.csv"
+
+# Functie om planning inclusief aanwezigheid te laden
+def load_planning():
+    if os.path.exists(PLANNING_CSV):
+        return pd.read_csv(PLANNING_CSV, index_col=0)
+    return pd.DataFrame(columns=["Datum", "Tijd", "Beschrijving", "Aanwezigheid"])
+
+# Functie om planning inclusief aanwezigheid op te slaan
+def save_planning():
+    st.session_state.planning.to_csv(PLANNING_CSV, index=False)
+
+# Laad de planning en zet in session_state als dat nog niet is gebeurd
+if "planning" not in st.session_state:
+    st.session_state.planning = load_planning()
+
+# Laad checkbox_checked state vanuit de CSV
+if "checkbox_checked" not in st.session_state:
+    st.session_state.checkbox_checked = {}
+
+    for idx, row in st.session_state.planning.iterrows():
+        try:
+            aanwezigheids_count = int(row["Aanwezigheid"]) if not pd.isna(row["Aanwezigheid"]) else 0
+        except ValueError:
+            aanwezigheids_count = 0
+
+        st.session_state.checkbox_checked[idx] = aanwezigheids_count
+
 # Aanwezigheid personen pagina
 elif st.session_state.page == "Aanwezigheid personen":
-     st.header("📝 Geef de aanwezigheid van personen aan")
- 
-     #Controleer of er personen in de lijst staan
-     if st.session_state.personen.empty:
-         st.warning("Er zijn nog geen personen toegevoegd. Voeg eerst personen toe via de pagina 'Personenbeheer'.")
-     else:
-         # Gegevens ophalen van de planning
+    st.header("📝 Geef de aanwezigheid van personen aan")
+
+    if st.session_state.personen.empty:
+        st.warning("Er zijn nog geen personen toegevoegd. Voeg eerst personen toe via de pagina 'Personenbeheer'.")
+    else:
+        data_changed = False
+
         for idx_planning, row_planning in st.session_state.planning.iterrows():
             datum = row_planning['Datum']
             tijd = row_planning['Tijd']
             beschrijving = row_planning['Beschrijving']
+            adres = row_planning['Adres']
 
-            with st.expander(f"📅 {datum} - ⏰ {tijd} - 📝 {beschrijving}"):
+            with st.expander(f"📅 {datum} - ⏰ {tijd} - 📝 {beschrijving} - 🗺️ {adres}", expanded=False):
                 if idx_planning not in st.session_state.checkbox_checked:
-                    st.session_state.checkbox_checked[idx_planning] = {}
+                    st.session_state.checkbox_checked[idx_planning] = 0
 
-                # Gegevens ophalen voor de personenlijst
+                aanwezigheid_count = 0  
+
                 for idx_personen, row_personen in st.session_state.personen.iterrows():
                     voornaam = row_personen['Voornaam']
                     nummer = row_personen['UUID-nummer']
 
-                    # Unieke key voor de checkbox
+                    # Checkbox tonen
                     checkbox_key = f"aanwezig_{nummer}_{idx_planning}"
+                    new_value = st.checkbox(f"{voornaam} aanwezig", key=checkbox_key, value=False)
 
-                    # Maak de checkbox en voer de add_person functie uit bij wijziging
-                    if checkbox_key not in st.session_state.checkbox_checked[idx_planning]:
-                        st.session_state.checkbox_checked[idx_planning][checkbox_key] = False
+                    # Tel aanwezige personen
+                    if new_value:
+                        aanwezigheid_count += 1  
 
-                    if st.checkbox(f"{voornaam} aanwezig", key=checkbox_key, value=st.session_state.checkbox_checked[idx_planning][checkbox_key]):
-                        add_person(idx_planning, checkbox_key)
-                    else:
-                        remove_person(idx_planning, checkbox_key)
+                # Update de aanwezigheid in de planning
+                if aanwezigheid_count != st.session_state.checkbox_checked[idx_planning]:
+                    st.session_state.checkbox_checked[idx_planning] = aanwezigheid_count
+                    st.session_state.planning.at[idx_planning, 'Aanwezigheid'] = aanwezigheid_count
+                    data_changed = True
 
-                # Update aanwezigheid per planning
-                st.session_state.planning.at[idx_planning, 'Aanwezigheid'] = sum(st.session_state.checkbox_checked[idx_planning].values())
-        
-        # Update CSV en push naar Github
-        update_planning_csv()
-        push_to_git()
- 
+        # Alleen opslaan als er iets is veranderd
+        if data_changed:
+            save_planning()
+            push_to_git()
+            st.success("Aanwezigheid opgeslagen en gepusht naar GitHub!")
+
         # Toon de bijgewerkte planning met aanwezigheid
         st.dataframe(st.session_state.planning, hide_index=True)
 
