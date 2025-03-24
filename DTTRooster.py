@@ -135,7 +135,7 @@ if st.session_state.page == "Rooster toevoegen":
                                      columns=['Datum', 'Tijd', 'Beschrijving', 'Adres', 'Aanwezigheid'])
             st.session_state.planning = pd.concat([st.session_state.planning, new_entry], ignore_index=True)
             update_planning_csv()  # Sla de planning op
-            push_to_git()  # Push git
+            #push_to_git()  # Push git
             st.success("Planning toegevoegd!")
             st.rerun()  # Herlaad de app om de lijst te updaten
 
@@ -207,7 +207,7 @@ elif st.session_state.page == "Aanwezigheid personen":
         # Alleen opslaan als er iets is veranderd
         if data_changed:
             update_planning_csv()
-            push_to_git()
+            #push_to_git()
 
         # Toon de bijgewerkte planning met aanwezigheid
         st.dataframe(st.session_state.planning, hide_index=True)
@@ -227,7 +227,7 @@ elif st.session_state.page == "Personenbeheer":
     new_person = st.text_input("Voeg een nieuwe persoon toe")
     if st.button("Toevoegen"):
         add_new_person(new_person)  # Update CSV
-        push_to_git()  # Upload naar GIT
+        #push_to_git()  # Upload naar GIT
 
         st.rerun()  # Herlaad de app
 
@@ -241,7 +241,7 @@ elif st.session_state.page == "Personenbeheer":
 
             # Update de CSV en GIT
             update_personen_csv()
-            push_to_git()
+            #push_to_git()
 
             st.success(f"{remove_person} verwijderd!")
             st.rerun()  # Herlaad de app om de lijst te updaten
