@@ -22,7 +22,6 @@ def update_planning_csv():
 
 # Functie die automatisch naar Git pushed
 def push_to_git():
-    print("Hoi test print")
     # Stel Git-instellingen in
     subprocess.run(["git", "config", "--global", "user.name", "streamlit-bot"])
     subprocess.run(["git", "config", "--global", "user.email", "streamlit-bot@example.com"])
@@ -34,7 +33,6 @@ def push_to_git():
     # Push naar de remote repository
     result = subprocess.run(["git", "push", "origin", "master"], capture_output=True)
     print(result)
-
 
 # Titel van de app
 st.title("📅 DTT Rooster & Aanwezigheid")
@@ -180,10 +178,11 @@ elif st.session_state.page == "Aanwezigheid personen":
                      add_person(idx_planning, checkbox_key)
                  else:
                      remove_person(idx_planning, checkbox_key)
- 
+                     
              st.session_state.planning.at[idx_planning, 'Aanwezigheid'] = sum(st.session_state.checkbox_checked[idx_planning].values())
  
          update_planning_csv()  # Update de CSV na het aanpassen van aanwezigheid
+         push_to_git() #Push naar Github
  
          # Toon de bijgewerkte planning met aanwezigheid
          st.dataframe(st.session_state.planning, hide_index=True)
