@@ -17,10 +17,14 @@ body, .stApp {
 }
 
 
+[data-testid=stMarkdownContainer]>h1 {
+    color: purple !important
+}
 /* Hoofdtekst en kopteksten aanpassen */
 h1, h2, h3, h4 {
     color: white;  /* Donkerblauw voor kopteksten */
 }
+
 
 [data-testid=stHeadingWithActionElements]>h1 {
     color: #182866
