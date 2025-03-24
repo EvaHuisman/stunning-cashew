@@ -1,44 +1,39 @@
-/* Verander de achtergrondkleur van de pagina naar lichtblauw */
+/* Verander de achtergrondkleur van de pagina */
 .main {
-    background-color: #EAF0F7;  /* Lichtblauwe kleur */
+    background-color: #ADD5F0;
 }
 
-/* Verander de achtergrondkleur van de sidebar naar pastelgeel */
+/* Verander de achtergrondkleur van de header */
+[data-testid=stHeader] {
+    background-color: #EAF0F7;
+}
+
+/* Verander de achtergrondkleur van de sidebar */
 [data-testid=stSidebar] {
-    background-color: #10133F !important;  /* donkerblauwe kleur */
+    background-color: #10133F;
+}
+[data-testid=stRadio]>label>div>p,[data-baseweb=radio]>div>div>p {
+    color:white;
 }
 
-/* Zorg ervoor dat de tekst in de sidebar donkerblauw is */
-.stMarkdownContainer {
-    color: #EAF0F7;  /* Donkerblauw voor tekst */
-}
-
-/* Verander de kleur van de knoppen in de sidebar */
-.css-1d391kg .sidebar .stButton>button {
-    background-color: #182866;  /* Donkerblauw voor de knoppen */
-    color: white;
-}
 
 /* Hoofdtekst en kopteksten aanpassen */
 h1, h2, h3, h4 {
-    color: #ffffff;  /* Donkerblauw voor kopteksten */
+    color: white;  /* Donkerblauw voor kopteksten */
 }
 
 [data-testid=stHeadingWithActionElements]>h1 {
-    color: black
+    color: #182866
 }
 
-/* Verwijder de rand van de tabel overal */
-.stDataFrame {
-    border: none;  /* Verwijder de rand van de tabel */
+[data-testid=stHeadingWithActionElements]>h2 {
+    color: #182866
 }
 
-/* Verwijder randen om de formuliervelden (tekstvelden, datum, tijd, etc.) */
-.stDateInput, .stTimeInput, .stTextArea, #text_input_1 {
-    border: none !important;  /* Verwijder de rand van de invoervelden */
-    border-radius: 5px;  /* Optioneel: voeg afgeronde hoeken toe */
-    background-color: white;
+[data-testid=stHeadingWithActionElements]>h3 {
+    color: #182866
 }
+
 
 /* Styling voor knoppen */
 .stButton>button {
@@ -54,7 +49,3 @@ h1, h2, h3, h4 {
     border-radius: 5px;
 }
 
-/* Als er randen moeten zijn, maak ze donkerblauw (bijv. om invoervelden) */
-.stTextInput, .stDateInput, .stTimeInput, .stTextArea, .stSelectbox select {
-    border: 2px solid #182866;  /* Donkerblauwe rand voor invoervelden en selectboxen */
-}
