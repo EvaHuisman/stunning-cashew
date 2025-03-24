@@ -206,11 +206,15 @@ elif st.session_state.page == "Aanwezigheid personen":
                     voornaam = row_personen['Voornaam']
                     nummer = row_personen['UUID-nummer']
 
-                    # Ophalen van vorige waarde uit session_state
-                if nummer not in st.session_state.checkbox_checked[idx_planning]:
+                   # Zorg dat de aanwezigheid dictionary correct geïnitialiseerd is
+                    if idx_planning not in st.session_state.checkbox_checked or not isinstance(st.session_state.checkbox_checked[idx_planning], dict):
+                        st.session_state.checkbox_checked[idx_planning] = {}
+
+                    # Zorg ervoor dat de sleutel (UUID-nummer) aanwezig is
+                    if nummer not in st.session_state.checkbox_checked[idx_planning]:
                         st.session_state.checkbox_checked[idx_planning][nummer] = False
 
-                previous_value = st.session_state.checkbox_checked[idx_planning][nummer]
+                    previous_value = st.session_state.checkbox_checked[idx_planning][nummer]
                 # Checkbox tonen
                 new_value = st.checkbox(f"{voornaam} aanwezig", key=f"aanwezig_{nummer}_{idx_planning}", value=previous_value)
 
