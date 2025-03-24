@@ -151,8 +151,6 @@ elif st.session_state.page == "Vrijdagrooster overzicht":
     csv = convert_df(st.session_state.planning)
     st.download_button("📥 Download Planning", data=csv, file_name="planning.csv", mime='text/csv')
 
-# Aanwezigheid personen pagina
-
 # Bestandspad voor de planning
 PLANNING_CSV = "planning.csv"
 
@@ -182,14 +180,22 @@ if "checkbox_checked" not in st.session_state:
 
         st.session_state.checkbox_checked[idx] = aanwezigheids_count
 
-        # Gegevens ophalen van de planning
+# Aanwezigheid personen pagina
+elif st.session_state.page == "Aanwezigheid personen":
+    st.header("📝 Geef de aanwezigheid van personen aan")
+
+    if st.session_state.personen.empty:
+        st.warning("Er zijn nog geen personen toegevoegd. Voeg eerst personen toe via de pagina 'Personenbeheer'.")
+    else:
+        data_changed = False
+
         for idx_planning, row_planning in st.session_state.planning.iterrows():
             datum = row_planning['Datum']
             tijd = row_planning['Tijd']
             beschrijving = row_planning['Beschrijving']
             adres = row_planning['Adres']
 
-            with st.expander(f"📅 {datum} - ⏰ {tijd} - 📝 {beschrijving} - 🗺️ {adres}"):
+            with st.expander(f"📅 {datum} - ⏰ {tijd} - 📝 {beschrijving} - 🗺️ {adres}", expanded=False):
                 if idx_planning not in st.session_state.checkbox_checked:
                     st.session_state.checkbox_checked[idx_planning] = 0
 
@@ -217,7 +223,8 @@ if "checkbox_checked" not in st.session_state:
         if data_changed:
             save_planning()
             push_to_git()
- 
+            st.success("Aanwezigheid opgeslagen en gepusht naar GitHub!")
+
         # Toon de bijgewerkte planning met aanwezigheid
         st.dataframe(st.session_state.planning, hide_index=True)
 
