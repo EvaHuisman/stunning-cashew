@@ -158,7 +158,7 @@ PLANNING_CSV = "planning.csv"
 def load_planning():
     if os.path.exists(PLANNING_CSV):
         return pd.read_csv(PLANNING_CSV, index_col=0)
-    return pd.DataFrame(columns=["Datum", "Tijd", "Beschrijving", "Aanwezigheid"])
+    return pd.DataFrame(columns=["Datum", "Tijd", "Beschrijving", "Adres", "Aanwezigheid"])
 
 # Functie om planning inclusief aanwezigheid op te slaan
 def save_planning():
@@ -174,11 +174,12 @@ if "checkbox_checked" not in st.session_state:
 
     for idx, row in st.session_state.planning.iterrows():
         try:
-            aanwezigheids_count = int(row["Aanwezigheid"]) if not pd.isna(row["Aanwezigheid"]) else 0
-        except ValueError:
-            aanwezigheids_count = 0
+            # Probeer de opgeslagen aanwezigheid te laden
+            aanwezigheid_dict = eval(row["Aanwezigheid"]) if isinstance(row["Aanwezigheid"], str) else {}
+        except:
+            aanwezigheid_dict = {}
 
-        st.session_state.checkbox_checked[idx] = aanwezigheids_count
+        st.session_state.checkbox_checked[idx] = aanwezigheid_dict
 
 # Aanwezigheid personen pagina
 elif st.session_state.page == "Aanwezigheid personen":
@@ -205,25 +206,30 @@ elif st.session_state.page == "Aanwezigheid personen":
                     voornaam = row_personen['Voornaam']
                     nummer = row_personen['UUID-nummer']
 
+                    # Ophalen van vorige waarde uit session_state
+                    previous_value = st.session_state.checkbox_checked[idx_planning].get(nummer, False)
                     # Checkbox tonen
-                    checkbox_key = f"aanwezig_{nummer}_{idx_planning}"
-                    new_value = st.checkbox(f"{voornaam} aanwezig", key=checkbox_key, value=False)
+                    new_value = st.checkbox(f"{voornaam} aanwezig", key=f"aanwezig_{nummer}_{idx_planning}", value=previous_value)
 
-                    # Tel aanwezige personen
+                    # Als waarde verandert, opslaan
+                    if new_value != previous_value:
+                        st.session_state.checkbox_checked[idx_planning][nummer] = new_value
+                        data_changed = True
+
+                    # Tel aanwezigen
                     if new_value:
                         aanwezigheid_count += 1  
 
-                # Update de aanwezigheid in de planning
-                if aanwezigheid_count != st.session_state.checkbox_checked[idx_planning]:
-                    st.session_state.checkbox_checked[idx_planning] = aanwezigheid_count
-                    st.session_state.planning.at[idx_planning, 'Aanwezigheid'] = aanwezigheid_count
-                    data_changed = True
+                # Update aanwezigheid per planning
+                st.session_state.planning.at[idx_planning, 'Aanwezigheid'] = str(st.session_state.checkbox_checked[idx_planning])
+
+                # Toon het aantal aanwezigen
+                st.markdown(f"**✅ Aantal aanwezigen: {aanwezigheid_count}**")
 
         # Alleen opslaan als er iets is veranderd
         if data_changed:
             save_planning()
             push_to_git()
-            st.success("Aanwezigheid opgeslagen en gepusht naar GitHub!")
 
         # Toon de bijgewerkte planning met aanwezigheid
         st.dataframe(st.session_state.planning, hide_index=True)
