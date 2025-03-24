@@ -198,16 +198,13 @@ elif st.session_state.page == "Aanwezigheid personen":
                     if new_value:
                         aanwezigheid_count += 1  
 
-                # Update aanwezigheid per planning
-                st.session_state.planning.at[idx_planning, 'Aanwezigheid'] = str(st.session_state.checkbox_checked[idx_planning])
-
-                # Toon het aantal aanwezigen
-                st.markdown(f"**✅ Aantal aanwezigen: {aanwezigheid_count}**")
+               # Update aanwezigheid per planning
+                st.session_state.planning.at[idx_planning, 'Aanwezigheid'] = sum(st.session_state.checkbox_checked[idx_planning].values())
 
         # Alleen opslaan als er iets is veranderd
         if data_changed:
             update_planning_csv()
-            #push_to_git()
+            push_to_git()
 
         # Toon de bijgewerkte planning met aanwezigheid
         st.dataframe(st.session_state.planning, hide_index=True)
@@ -227,7 +224,7 @@ elif st.session_state.page == "Personenbeheer":
     new_person = st.text_input("Voeg een nieuwe persoon toe")
     if st.button("Toevoegen"):
         add_new_person(new_person)  # Update CSV
-        #push_to_git()  # Upload naar GIT
+        push_to_git()  # Upload naar GIT
 
         st.rerun()  # Herlaad de app
 
@@ -241,7 +238,7 @@ elif st.session_state.page == "Personenbeheer":
 
             # Update de CSV en GIT
             update_personen_csv()
-            #push_to_git()
+            push_to_git()
 
             st.success(f"{remove_person} verwijderd!")
             st.rerun()  # Herlaad de app om de lijst te updaten
