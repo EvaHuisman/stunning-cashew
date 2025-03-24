@@ -152,6 +152,39 @@ elif st.session_state.page == "Vrijdagrooster overzicht":
     st.download_button("📥 Download Planning", data=csv, file_name="planning.csv", mime='text/csv')
 
 # Aanwezigheid personen pagina
+
+# Bestandspad voor de planning
+PLANNING_CSV = "planning.csv"
+
+# Functie om planning inclusief aanwezigheid te laden
+def load_planning():
+    if os.path.exists(PLANNING_CSV):
+        return pd.read_csv(PLANNING_CSV, index_col=0)
+    return pd.DataFrame(columns=["Datum", "Tijd", "Beschrijving", "Aanwezigheid"])
+
+# Functie om planning inclusief aanwezigheid op te slaan
+def save_planning():
+    st.session_state.planning.to_csv(PLANNING_CSV)
+
+# Laad de planning en zet in session_state als dat nog niet is gebeurd
+if "planning" not in st.session_state:
+    st.session_state.planning = load_planning()
+
+# Laad checkbox_checked state vanuit de CSV
+if "checkbox_checked" not in st.session_state:
+    st.session_state.checkbox_checked = {}
+
+    for idx, row in st.session_state.planning.iterrows():
+        if isinstance(row["Aanwezigheid"], str):  # Convert string naar dict als nodig
+            try:
+                aanwezigheids_dict = eval(row["Aanwezigheid"])
+                if isinstance(aanwezigheids_dict, dict):
+                    st.session_state.checkbox_checked[idx] = aanwezigheids_dict
+            except:
+                st.session_state.checkbox_checked[idx] = {}
+        else:
+            st.session_state.checkbox_checked[idx] = {}
+
 elif st.session_state.page == "Aanwezigheid personen":
      st.header("📝 Geef de aanwezigheid van personen aan")
  
@@ -180,35 +213,27 @@ elif st.session_state.page == "Aanwezigheid personen":
                     voornaam = row_personen['Voornaam']
                     nummer = row_personen['UUID-nummer']
 
-                    # Unieke key voor de checkbox
-                    checkbox_key = f"aanwezig_{nummer}_{idx_planning}"
+                    # Ophalen van vorige aanwezigheid uit session_state
+                    previous_value = st.session_state.checkbox_checked[idx_planning].get(nummer, False)
 
-                    # Ophalen van opgeslagen waarde (standaard is False)
-                    if checkbox_key not in st.session_state.checkbox_checked[idx_planning]:
-                        st.session_state.checkbox_checked[idx_planning][checkbox_key] = False
+                    # Checkbox tonen
+                    new_value = st.checkbox(f"{voornaam} aanwezig", key=f"aanwezig_{nummer}_{idx_planning}", value=previous_value)
 
-                    # Check of de gebruiker de checkbox aan- of uitzet
-                    new_value = st.checkbox(
-                        f"{voornaam} aanwezig", 
-                        key=checkbox_key, 
-                        value=st.session_state.checkbox_checked[idx_planning][checkbox_key]
-                    )
+                    # Check of er een wijziging is
+                    if new_value != previous_value:
+                        st.session_state.checkbox_checked[idx_planning][nummer] = new_value
+                        data_changed = True
 
-                    # Controleer of er een wijziging is
-                    if new_value != st.session_state.checkbox_checked[idx_planning][checkbox_key]:
-                        st.session_state.checkbox_checked[idx_planning][checkbox_key] = new_value
-                        data_changed = True  
-
-                    # Tel het aantal aanwezige personen
-                    if st.session_state.checkbox_checked[idx_planning][checkbox_key]:
+                    # Tel aanwezige personen
+                    if new_value:
                         aanwezigheid_count += 1  
 
                 # Update de aanwezigheid in de planning
-                st.session_state.planning.at[idx_planning, 'Aanwezigheid'] = aanwezigheid_count  
+                st.session_state.planning.at[idx_planning, 'Aanwezigheid'] = str(st.session_state.checkbox_checked[idx_planning])
 
-        # Alleen opslaan en pushen als er een wijziging is
+        # Alleen opslaan als er iets is veranderd
         if data_changed:
-            update_planning_csv()
+            save_planning()
             push_to_git()
  
         # Toon de bijgewerkte planning met aanwezigheid
