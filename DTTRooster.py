@@ -207,17 +207,20 @@ elif st.session_state.page == "Aanwezigheid personen":
                     nummer = row_personen['UUID-nummer']
 
                     # Ophalen van vorige waarde uit session_state
-                    previous_value = st.session_state.checkbox_checked[idx_planning].get(nummer, False)
-                    # Checkbox tonen
-                    new_value = st.checkbox(f"{voornaam} aanwezig", key=f"aanwezig_{nummer}_{idx_planning}", value=previous_value)
+                if nummer not in st.session_state.checkbox_checked[idx_planning]:
+                        st.session_state.checkbox_checked[idx_planning][nummer] = False
+
+                previous_value = st.session_state.checkbox_checked[idx_planning][nummer]
+                # Checkbox tonen
+                new_value = st.checkbox(f"{voornaam} aanwezig", key=f"aanwezig_{nummer}_{idx_planning}", value=previous_value)
 
                     # Als waarde verandert, opslaan
-                    if new_value != previous_value:
+                if new_value != previous_value:
                         st.session_state.checkbox_checked[idx_planning][nummer] = new_value
                         data_changed = True
 
                     # Tel aanwezigen
-                    if new_value:
+                if new_value:
                         aanwezigheid_count += 1  
 
                 # Update aanwezigheid per planning
