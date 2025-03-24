@@ -7,65 +7,8 @@ from Password import PASSWORD
 
 
 # Voeg de link naar het CSS-bestand toe aan het eind van de code
-st.markdown("""
-    <style>
-        /* Verander de achtergrondkleur van de pagina naar lichtblauw */
-        .main {
-            background-color: #ADD8E6;  /* Lichtblauwe kleur */
-        }
-
-        /* Verander de achtergrondkleur van de sidebar naar pastelgeel */
-        .sidebar {
-            background-color: #FFEB3B !important;  /* Pastelgele kleur */
-        }
-
-        /* Zorg ervoor dat de tekst in de sidebar donkerblauw is */
-        .css-1d391kg .sidebar .sidebar-content {
-            color: #000080;  /* Donkerblauw voor tekst */
-        }
-
-        /* Verander de kleur van de knoppen in de sidebar */
-        .css-1d391kg .sidebar .stButton>button {
-            background-color: #000080;  /* Donkerblauw voor de knoppen */
-            color: white;
-        }
-
-        /* Hoofdtekst en kopteksten aanpassen */
-        h1, h2, h3, h4 {
-            color: #000080;  /* Donkerblauw voor kopteksten */
-        }
-
-        /* Verwijder de rand van de tabel overal */
-        .stDataFrame {
-            border: none;  /* Verwijder de rand van de tabel */
-        }
-
-        /* Verwijder randen om de formuliervelden (tekstvelden, datum, tijd, etc.) */
-        .stTextInput, .stDateInput, .stTimeInput, .stTextArea {
-            border: none !important;  /* Verwijder de rand van de invoervelden */
-            border-radius: 5px;  /* Optioneel: voeg afgeronde hoeken toe */
-        }
-
-        /* Styling voor knoppen */
-        .stButton>button {
-            background-color: #000080;
-            color: white;
-            border-radius: 10px;
-            border: 2px solid #000080;  /* Donkerblauwe rand voor de knoppen */
-        }
-
-        /* Styling voor selectboxen */
-        .stSelectbox select {
-            border: none !important;  /* Verwijder de rand van de selectboxen */
-            border-radius: 5px;
-        }
-
-        /* Als er randen moeten zijn, maak ze donkerblauw (bijv. om invoervelden) */
-        .stTextInput, .stDateInput, .stTimeInput, .stTextArea, .stSelectbox select {
-            border: 2px solid #000080;  /* Donkerblauwe rand voor invoervelden en selectboxen */
-        }
-    </style>
-""", unsafe_allow_html=True)
+with open("style.css", encoding="utf-8") as cssBron:
+    st.markdown(f"<style>{cssBron.read()}</style>", unsafe_allow_html=True)
         
 # Functie om de personenlijst op te slaan in de CSV
 def update_personen_csv():
