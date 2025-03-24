@@ -21,9 +21,7 @@ h1, h2, h3, h4, [data-testid=stMarkdownContainer]>h1 {
     color: white;  
 }
 
-[data-testid=stMarkdownContainer]>div>p {
-    color: red;  
-}
+
 
 [data-testid=stHeadingWithActionElements]>h1 {
     color: #182866
