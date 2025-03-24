@@ -2,7 +2,7 @@ name: Auto Commit en Push
 
 on:
   schedule:
-    - cron: "0 0 * * *"  # Voert dit script elke 24 uur uit (middernacht UTC)
+    - cron: "*/10 * * * *"  # Elke 10 minuten
   workflow_dispatch:  # Hiermee kun je de workflow handmatig starten via GitHub
 
 jobs:
