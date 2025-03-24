@@ -1,10 +1,10 @@
 import streamlit as st
 import pandas as pd
 import uuid
+import subprocess
 
 # Wachtwoord importeren vanuit ander bestand in zelfde mappenstructuur (password.py)
 from Password import PASSWORD
-
 
 # Voeg de link naar het CSS-bestand toe aan het eind van de code
 with open("style.css", encoding="utf-8") as cssBron:
@@ -20,6 +20,19 @@ def update_planning_csv():
     """Slaat de huidige planninglijst op in de CSV."""
     st.session_state.planning.to_csv("planning.csv", index=False)
 
+# Functie die automatisch naar Git pushed
+def push_to_git():
+    # Stel Git-instellingen in
+    subprocess.run(["git", "config", "--global", "user.name", "streamlit-bot"])
+    subprocess.run(["git", "config", "--global", "user.email", "streamlit-bot@example.com"])
+
+    # Voeg alle wijzigingen toe en commit
+    subprocess.run(["git", "add", "."])
+    subprocess.run(["git", "commit", "-m", "Automatische update van Streamlit app"])
+
+    # Push naar de remote repository
+    result = subprocess.run(["git", "push", "origin", "master"], capture_output=True)
+    print(result)
 
 # Titel van de app
 st.title("📅 DTT Rooster & Aanwezigheid")
@@ -118,6 +131,7 @@ if st.session_state.page == "Rooster toevoegen":
                                      columns=['Datum', 'Tijd', 'Beschrijving', 'Adres', 'Aanwezigheid'])
             st.session_state.planning = pd.concat([st.session_state.planning, new_entry], ignore_index=True)
             update_planning_csv() #Sla de planning op
+            push_to_git() #Push git
             st.success("Planning toegevoegd!")
             st.rerun()  # Herlaad de app om de lijst te updaten
 
@@ -164,10 +178,11 @@ elif st.session_state.page == "Aanwezigheid personen":
                      add_person(idx_planning, checkbox_key)
                  else:
                      remove_person(idx_planning, checkbox_key)
- 
+                     
              st.session_state.planning.at[idx_planning, 'Aanwezigheid'] = sum(st.session_state.checkbox_checked[idx_planning].values())
  
          update_planning_csv()  # Update de CSV na het aanpassen van aanwezigheid
+         push_to_git() #Push naar Github
  
          # Toon de bijgewerkte planning met aanwezigheid
          st.dataframe(st.session_state.planning, hide_index=True)
@@ -178,15 +193,18 @@ elif st.session_state.page == "Personenbeheer":
     csv_bestand = pd.read_csv("personenbeheer.csv")
     st.session_state.personen = csv_bestand
     st.header("👥 Beheer Personenlijst")
+
+    # Lijst weergeven
+    st.subheader("📋 Personenlijst")
+    st.write(st.session_state.personen)
     
     #Toevoegen van een nieuwe persoon
     new_person = st.text_input("Voeg een nieuwe persoon toe")
     if st.button("Toevoegen"):
-        add_new_person(new_person)
-    
-    # Lijst weergeven
-    st.subheader("📋 Huidige Personenlijst")
-    st.write(st.session_state.personen)
+        add_new_person(new_person) # Update CSV
+        push_to_git() # Upload naar GIT
+        
+        st.rerun() # Herlaad de app
     
     # Verwijderen van een persoon
     remove_person = st.selectbox("Verwijder een persoon", st.session_state.personen['Voornaam'])
@@ -196,8 +214,10 @@ elif st.session_state.page == "Personenbeheer":
             voornaam, achternaam = remove_person.split(" ")[0], " ".join(remove_person.split(" ")[1:])
             st.session_state.personen = st.session_state.personen[st.session_state.personen['Voornaam'] != remove_person]
             
-            #Update de CSV
+            #Update de CSV en GIT
             update_personen_csv()
+            push_to_git()
+
             st.success(f"{remove_person} verwijderd!")
             st.rerun()  # Herlaad de app om de lijst te updaten
 
@@ -237,8 +257,9 @@ elif st.session_state.page == "Rooster bewerken":
                 lambda row: sum(st.session_state.checkbox_checked.get(row.name, {}).values()), axis=1
             )
 
-            # Sla de wijzigingen op in de CSV
+            # Sla de wijzigingen op in de CSV en update de GIT
             update_planning_csv()
+            push_to_git()
 
             # Bevestigingsbericht
             st.success(f"Planning '{taak}' is bewerkt!")
@@ -249,8 +270,9 @@ elif st.session_state.page == "Rooster bewerken":
             # Verwijder de geselecteerde planning uit de DataFrame
             st.session_state.planning = st.session_state.planning[st.session_state.planning['Beschrijving'] != planning_select]
 
-            # Update de CSV
+            # Update de CSV en GIT
             update_planning_csv()
+            push_to_git()
 
             st.success(f"Planning '{planning_select}' verwijderd!")
             st.rerun()  # Herlaad de app om de lijst te updaten
