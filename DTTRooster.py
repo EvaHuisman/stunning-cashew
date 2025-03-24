@@ -2,9 +2,13 @@ import streamlit as st
 import pandas as pd
 import uuid
 import subprocess
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 # Wachtwoord importeren vanuit ander bestand in zelfde mappenstructuur (password.py)
-from Password import PASSWORD
+PASSWORD = os.getenv("PASSWORD")
 
 # Voeg de link naar het CSS-bestand toe aan het eind van de code
 with open("style.css", encoding="utf-8") as cssBron:
