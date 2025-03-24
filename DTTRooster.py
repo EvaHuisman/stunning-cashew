@@ -164,7 +164,7 @@ def load_planning():
 
 # Functie om planning inclusief aanwezigheid op te slaan
 def save_planning():
-    st.session_state.planning.to_csv(PLANNING_CSV)
+    st.session_state.planning.to_csv(PLANNING_CSV, index=False)
 
 # Laad de planning en zet in session_state als dat nog niet is gebeurd
 if "planning" not in st.session_state:
@@ -175,24 +175,12 @@ if "checkbox_checked" not in st.session_state:
     st.session_state.checkbox_checked = {}
 
     for idx, row in st.session_state.planning.iterrows():
-        if isinstance(row["Aanwezigheid"], str):  # Convert string naar dict als nodig
-            try:
-                aanwezigheids_dict = eval(row["Aanwezigheid"])
-                if isinstance(aanwezigheids_dict, dict):
-                    st.session_state.checkbox_checked[idx] = aanwezigheids_dict
-            except:
-                st.session_state.checkbox_checked[idx] = {}
-        else:
-            st.session_state.checkbox_checked[idx] = {}
+        try:
+            aanwezigheids_count = int(row["Aanwezigheid"]) if not pd.isna(row["Aanwezigheid"]) else 0
+        except ValueError:
+            aanwezigheids_count = 0
 
-elif st.session_state.page == "Aanwezigheid personen":
-     st.header("📝 Geef de aanwezigheid van personen aan")
- 
-     #Controleer of er personen in de lijst staan
-     if st.session_state.personen.empty:
-         st.warning("Er zijn nog geen personen toegevoegd. Voeg eerst personen toe via de pagina 'Personenbeheer'.")
-     else:
-        data_changed = False  # Check of er wijzigingen zijn geweest
+        st.session_state.checkbox_checked[idx] = aanwezigheids_count
 
         # Gegevens ophalen van de planning
         for idx_planning, row_planning in st.session_state.planning.iterrows():
@@ -203,33 +191,27 @@ elif st.session_state.page == "Aanwezigheid personen":
 
             with st.expander(f"📅 {datum} - ⏰ {tijd} - 📝 {beschrijving} - 🗺️ {adres}"):
                 if idx_planning not in st.session_state.checkbox_checked:
-                    st.session_state.checkbox_checked[idx_planning] = {}
+                    st.session_state.checkbox_checked[idx_planning] = 0
 
-                # Lijst om aanwezigheid bij te houden
                 aanwezigheid_count = 0  
 
-                # Loop door de personen
                 for idx_personen, row_personen in st.session_state.personen.iterrows():
                     voornaam = row_personen['Voornaam']
                     nummer = row_personen['UUID-nummer']
 
-                    # Ophalen van vorige aanwezigheid uit session_state
-                    previous_value = st.session_state.checkbox_checked[idx_planning].get(nummer, False)
-
                     # Checkbox tonen
-                    new_value = st.checkbox(f"{voornaam} aanwezig", key=f"aanwezig_{nummer}_{idx_planning}", value=previous_value)
-
-                    # Check of er een wijziging is
-                    if new_value != previous_value:
-                        st.session_state.checkbox_checked[idx_planning][nummer] = new_value
-                        data_changed = True
+                    checkbox_key = f"aanwezig_{nummer}_{idx_planning}"
+                    new_value = st.checkbox(f"{voornaam} aanwezig", key=checkbox_key, value=False)
 
                     # Tel aanwezige personen
                     if new_value:
                         aanwezigheid_count += 1  
 
                 # Update de aanwezigheid in de planning
-                st.session_state.planning.at[idx_planning, 'Aanwezigheid'] = str(st.session_state.checkbox_checked[idx_planning])
+                if aanwezigheid_count != st.session_state.checkbox_checked[idx_planning]:
+                    st.session_state.checkbox_checked[idx_planning] = aanwezigheid_count
+                    st.session_state.planning.at[idx_planning, 'Aanwezigheid'] = aanwezigheid_count
+                    data_changed = True
 
         # Alleen opslaan als er iets is veranderd
         if data_changed:
