@@ -159,7 +159,8 @@ elif st.session_state.page == "Aanwezigheid personen":
      if st.session_state.personen.empty:
          st.warning("Er zijn nog geen personen toegevoegd. Voeg eerst personen toe via de pagina 'Personenbeheer'.")
      else:
-        data_changed = False
+        data_changed = False  # Check of er wijzigingen zijn geweest
+
         # Gegevens ophalen van de planning
         for idx_planning, row_planning in st.session_state.planning.iterrows():
             datum = row_planning['Datum']
@@ -171,28 +172,39 @@ elif st.session_state.page == "Aanwezigheid personen":
                 if idx_planning not in st.session_state.checkbox_checked:
                     st.session_state.checkbox_checked[idx_planning] = {}
 
-                # Gegevens ophalen voor de personenlijst
+                # Lijst om aanwezigheid bij te houden
+                aanwezigheid_count = 0  
+
+                # Loop door de personen
                 for idx_personen, row_personen in st.session_state.personen.iterrows():
                     voornaam = row_personen['Voornaam']
                     nummer = row_personen['UUID-nummer']
 
-                # Unieke key voor de checkbox
-                checkbox_key = f"aanwezig_{nummer}_{idx_planning}"
+                    # Unieke key voor de checkbox
+                    checkbox_key = f"aanwezig_{nummer}_{idx_planning}"
 
-                # Check of de gebruiker de checkbox aan- of uitzet
-                new_value = st.checkbox(
-                    f"{voornaam} aanwezig", 
-                    key=checkbox_key, 
-                    value=st.session_state.checkbox_checked[idx_planning][checkbox_key]
-                )
+                    # Ophalen van opgeslagen waarde (standaard is False)
+                    if checkbox_key not in st.session_state.checkbox_checked[idx_planning]:
+                        st.session_state.checkbox_checked[idx_planning][checkbox_key] = False
 
-                # Alleen bij verandering updaten
-                if new_value != st.session_state.checkbox_checked[idx_planning][checkbox_key]:
-                    st.session_state.checkbox_checked[idx_planning][checkbox_key] = new_value
-                    data_changed = True  # Er is een wijziging geweest
+                    # Check of de gebruiker de checkbox aan- of uitzet
+                    new_value = st.checkbox(
+                        f"{voornaam} aanwezig", 
+                        key=checkbox_key, 
+                        value=st.session_state.checkbox_checked[idx_planning][checkbox_key]
+                    )
 
-                # Update aanwezigheid per planning
-                st.session_state.planning.at[idx_planning, 'Aanwezigheid'] = sum(st.session_state.checkbox_checked[idx_planning].values())
+                    # Controleer of er een wijziging is
+                    if new_value != st.session_state.checkbox_checked[idx_planning][checkbox_key]:
+                        st.session_state.checkbox_checked[idx_planning][checkbox_key] = new_value
+                        data_changed = True  
+
+                    # Tel het aantal aanwezige personen
+                    if st.session_state.checkbox_checked[idx_planning][checkbox_key]:
+                        aanwezigheid_count += 1  
+
+                # Update de aanwezigheid in de planning
+                st.session_state.planning.at[idx_planning, 'Aanwezigheid'] = aanwezigheid_count  
 
         # Alleen opslaan en pushen als er een wijziging is
         if data_changed:
