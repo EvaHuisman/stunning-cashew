@@ -22,6 +22,7 @@ def update_planning_csv():
 
 # Functie die automatisch naar Git pushed
 def push_to_git():
+    print("Hoi test print")
     # Stel Git-instellingen in
     subprocess.run(["git", "config", "--global", "user.name", "streamlit-bot"])
     subprocess.run(["git", "config", "--global", "user.email", "streamlit-bot@example.com"])
