@@ -159,7 +159,8 @@ elif st.session_state.page == "Aanwezigheid personen":
      if st.session_state.personen.empty:
          st.warning("Er zijn nog geen personen toegevoegd. Voeg eerst personen toe via de pagina 'Personenbeheer'.")
      else:
-         # Gegevens ophalen van de planning
+        data_changed = False
+        # Gegevens ophalen van de planning
         for idx_planning, row_planning in st.session_state.planning.iterrows():
             datum = row_planning['Datum']
             tijd = row_planning['Tijd']
@@ -175,24 +176,28 @@ elif st.session_state.page == "Aanwezigheid personen":
                     voornaam = row_personen['Voornaam']
                     nummer = row_personen['UUID-nummer']
 
-                    # Unieke key voor de checkbox
-                    checkbox_key = f"aanwezig_{nummer}_{idx_planning}"
+                # Unieke key voor de checkbox
+                checkbox_key = f"aanwezig_{nummer}_{idx_planning}"
 
-                    # Maak de checkbox en voer de add_person functie uit bij wijziging
-                    if checkbox_key not in st.session_state.checkbox_checked[idx_planning]:
-                        st.session_state.checkbox_checked[idx_planning][checkbox_key] = False
+                # Check of de gebruiker de checkbox aan- of uitzet
+                new_value = st.checkbox(
+                    f"{voornaam} aanwezig", 
+                    key=checkbox_key, 
+                    value=st.session_state.checkbox_checked[idx_planning][checkbox_key]
+                )
 
-                    if st.checkbox(f"{voornaam} aanwezig", key=checkbox_key, value=st.session_state.checkbox_checked[idx_planning][checkbox_key]):
-                        add_person(idx_planning, checkbox_key)
-                    else:
-                        remove_person(idx_planning, checkbox_key)
+                # Alleen bij verandering updaten
+                if new_value != st.session_state.checkbox_checked[idx_planning][checkbox_key]:
+                    st.session_state.checkbox_checked[idx_planning][checkbox_key] = new_value
+                    data_changed = True  # Er is een wijziging geweest
 
                 # Update aanwezigheid per planning
                 st.session_state.planning.at[idx_planning, 'Aanwezigheid'] = sum(st.session_state.checkbox_checked[idx_planning].values())
-        
-        # Update CSV en push naar Github
-        update_planning_csv()
-        push_to_git()
+
+        # Alleen opslaan en pushen als er een wijziging is
+        if data_changed:
+            update_planning_csv()
+            push_to_git()
  
         # Toon de bijgewerkte planning met aanwezigheid
         st.dataframe(st.session_state.planning, hide_index=True)
