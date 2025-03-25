@@ -276,9 +276,9 @@ elif st.session_state.page == "Rooster bewerken":
              st.session_state.planning.at[planning_idx, 'Adres'] = adres
  
              # Herbereken de aanwezigheid op basis van de nieuwe gegevens
-             st.session_state.planning['Aanwezigheid'] = st.session_state.planning.apply(
-                 lambda row: sum(st.session_state.checkbox_checked.get(row.name, {}).values()), axis=1
-             )
+             #st.session_state.planning['Aanwezigheid'] = st.session_state.planning.apply(
+             #    lambda row: sum(st.session_state.checkbox_checked.get(row.name, {}).values()), axis=1
+             #) Deze functie telt de aanwezigheid en past dus de planning weer aan naar een aanwezigheidstelling
  
              # Sla de wijzigingen op in de CSV en update de GIT
              update_planning_csv()
