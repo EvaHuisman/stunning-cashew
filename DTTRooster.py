@@ -13,7 +13,7 @@ load_dotenv()
 PASSWORD = os.getenv("PASSWORD")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
-# Voeg de link naar het CSS-bestand toe aan het eind van de code
+# Voeg de link naar het CSS-bestand toe
 with open("style.css", encoding="utf-8") as cssBron:
     st.markdown(f"<style>{cssBron.read()}</style>", unsafe_allow_html=True)
 
@@ -149,6 +149,10 @@ if st.session_state.page == "Rooster toevoegen":
 # Vrijdagrooster overzicht 
 elif st.session_state.page == "Vrijdagrooster overzicht":
     st.header("📊 Overzicht Planning")
+
+    # Verwijder de 'Aanwezigheid' kolom uit de planning
+    st.session_state.planning = st.session_state.planning.drop(columns=['Aanwezigheid'], errors='ignore')
+
     st.dataframe(st.session_state.planning, hide_index=True)
 
     # Optie om de planning te downloaden
@@ -194,10 +198,10 @@ elif st.session_state.page == "Aanwezigheid personen":
                 if not checkbox_key in checkbox_checked[idx_planning]:
                    checkbox_checked[idx_planning][checkbox_key] = False
 
-                if st.checkbox(f"{voornaam} aanwezig", key=checkbox_key, value=checkbox_checked[idx_planning][checkbox_key]):
-                    add_person(idx_planning, checkbox_key, checkbox_checked)
-                else:
-                    remove_person(idx_planning, checkbox_key, checkbox_checked)
+               # if st.checkbox(f"{voornaam} aanwezig", key=checkbox_key, value=checkbox_checked[idx_planning][checkbox_key]):
+                  #  add_person(idx_planning, checkbox_key, checkbox_checked)
+              #  else:
+                 #   remove_person(idx_planning, checkbox_key, checkbox_checked)
 
             st.session_state.planning.at[idx_planning, 'Aanwezigheid'] = sum(checkbox_checked[idx_planning].values())
     
