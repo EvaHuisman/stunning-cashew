@@ -45,7 +45,7 @@ def commit_and_push_changes(data_url):
         print(e)
 
 # Titel van de app
-st.title("📅 DTT Rooster & Aanwezigheid")
+st.title("📅 DTT Rooster")
 
 # Initialiseer session state
 def init_state():
@@ -245,7 +245,7 @@ elif st.session_state.page == "Rooster bewerken":
         adres = st.text_input("Adres", value=st.session_state.planning.at[planning_idx, 'Adres'])
 
         # Als de gebruiker de gegevens wijzigt, moeten we de DataFrame updaten
-        if st.button("Opslaan"):
+        if st.button("Bewerkingen opslaan"):
             # Werk de planning bij in de DataFrame
             st.session_state.planning.at[planning_idx, 'Datum'] = datum
             st.session_state.planning.at[planning_idx, 'Tijd'] = tijd
