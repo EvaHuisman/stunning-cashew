@@ -64,6 +64,9 @@ def init_state():
     if 'checkbox_checked' not in st.session_state:
         st.session_state.checkbox_checked = {}
 
+    if 'person_added' not in st.session_state:
+        st.session_state['person_added'] = False  # Indicator voor of een persoon toegevoegd is
+
 init_state()
 
 # Wachtwoordcontrole
@@ -109,19 +112,43 @@ def add_new_person(new_person):
         if new_person not in st.session_state.personen['Voornaam'].values:
             # Nieuwe persoon toevoegen als DataFrame-rij
             voornaam = new_person.strip()
-            new_person_data = pd.DataFrame([[voornaam, uuid.uuid4()]], columns=['Voornaam', 'UUID-nummer'])
+            new_person_data = pd.DataFrame([[voornaam, "", uuid.uuid4()]], columns=['Voornaam', 'Achternaam', 'UUID-nummer'])
 
             # Voeg de nieuwe persoon toe aan de DataFrame
             st.session_state.personen = pd.concat([st.session_state.personen, new_person_data], ignore_index=True)
 
             # Update de CSV
             update_personen_csv()
-            st.success(f"{new_person} toegevoegd!") # Succesbericht na toevoegen van de persoon
             commit_and_push_changes('personenbeheer.csv')  # Upload naar GIT
+
+            # Zet de flag dat er een persoon is toegevoegd
+            st.session_state['person_added'] = new_person
+
+            # Herstart de pagina om de wijziging zichtbaar te maken
+            st.session_state.page = "Personenbeheer"  # Forceer herladen van de pagina
+            st.rerun()  # Herstart de pagina zodat de verandering zichtbaar is
         else:
             st.warning("Deze persoon bestaat al.") # Waarschuwing als de persoon al bestaat
     else:
         st.warning("Voer een geldige naam in.") # Waarschuwing als de naam leeg is
+
+# Verwijderen van een persoon
+def remove_person_from_list(person_name):
+    """Verwijdert een persoon op basis van de voornaam uit de lijst."""
+    if person_name:
+        # Verwijder de persoon uit de DataFrame
+        st.session_state.personen = st.session_state.personen[st.session_state.personen['Voornaam'] != person_name]
+
+        # Update de CSV
+        update_personen_csv()
+        commit_and_push_changes('personenbeheer.csv')
+
+        # Zet de flag dat er een persoon is verwijderd
+        st.session_state['person_removed'] = person_name
+
+        # Herstart de pagina om de wijziging zichtbaar te maken
+        st.session_state.page = "Personenbeheer"  # Forceer herladen van de pagina
+        st.rerun()  # Herstart de pagina zodat de verandering zichtbaar is
 
 # Rooster toevoegen
 if st.session_state.page == "Rooster toevoegen":
@@ -160,34 +187,35 @@ elif st.session_state.page == "Vrijdagrooster overzicht":
 
 # Personenbeheer
 elif st.session_state.page == "Personenbeheer":
-    # Lees de bestaande personenlijst in
-    csv_bestand = pd.read_csv("personenbeheer.csv")
-    st.session_state.personen = csv_bestand
     st.header("👥 Beheer Personenlijst")
 
     # Lijst weergeven
     st.subheader("📋 Personenlijst")
     st.write(st.session_state.personen)
 
+    # Voeg een succesmelding toe als een persoon is toegevoegd
+    if st.session_state.get('person_added', False):
+        st.success(f"{st.session_state['person_added']} toegevoegd!")  # Melding dat de persoon is toegevoegd
+
+        # Reset de flag na het tonen van de melding
+        st.session_state['person_added'] = False
+
+    # Voeg een succesmelding toe als een persoon is verwijderd
+    if st.session_state.get('person_removed', False):
+        st.success(f"{st.session_state['person_removed']} verwijderd!")  # Melding dat de persoon is verwijderd
+
+        # Reset de flag na het tonen van de melding
+        st.session_state['person_removed'] = False
+
     # Toevoegen van een nieuwe persoon
     new_person = st.text_input("Voeg een nieuwe persoon toe")
     if st.button("Toevoegen"):
-        add_new_person(new_person)  # Update CSV
-        st.session_state.page = "Personenbeheer"  # Forceer herladen van de pagina
+        add_new_person(new_person)  # Update CSV en herlees personenlijst
 
     # Verwijderen van een persoon
     remove_person = st.selectbox("Verwijder een persoon", st.session_state.personen['Voornaam'])
     if st.button("Verwijderen"):
-        if remove_person:
-            # Verwijder de persoon uit de DataFrame
-            st.session_state.personen = st.session_state.personen[st.session_state.personen['Voornaam'] != remove_person]
-
-            # Update de CSV en GIT
-            update_personen_csv()
-            commit_and_push_changes('personenbeheer.csv')
-
-            st.success(f"{remove_person} verwijderd!")
-            st.session_state.page = "Personenbeheer"  # Forceer herladen van de pagina
+        remove_person_from_list(remove_person)  # Verwijder de persoon uit de lijst en update de CSV
 
 # Rooster bewerken
 elif st.session_state.page == "Rooster bewerken":
