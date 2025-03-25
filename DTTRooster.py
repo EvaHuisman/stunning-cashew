@@ -29,7 +29,6 @@ def update_planning_csv():
 
 def commit_and_push_changes(data_url):
     """Function to commit and push changes to GitHub."""
-
     try:
         repo = git.Repo()
         repo.git.remote("set-url", "origin", f"https://{GITHUB_TOKEN}@github.com/EvaHuisman/stunning-cashew.git")
@@ -99,7 +98,7 @@ st.session_state.page = st.sidebar.radio("Ga naar", ["Vrijdagrooster overzicht",
 
 # Functie om de aanwezigheid bij te werken
 #def add_person(idx_planning, checkbox_key, checkbox_checked):
-#    """Update de aanwezigheid op basis van de checkbox status."""
+#    """Update de aanwezigheid op basis van de checkbox status.""" 
 #    checkbox_checked[idx_planning][checkbox_key] = True
 
 #def remove_person(idx_planning, checkbox_key, checkbox_checked):
@@ -121,7 +120,7 @@ def add_new_person(new_person):
             # Update de CSV
             update_personen_csv()
             st.success(f"{new_person} toegevoegd!") # Succesbericht na toevoegen van de persoon
-            st.rerun()  # Herlaad de app om de lijst te updaten
+            st.cache_data.clear()  # Herlaad de app om de lijst te updaten
         else:
             st.warning("Deze persoon bestaat al.") # Waarschuwing als de persoon al bestaat
     else:
@@ -143,8 +142,8 @@ if st.session_state.page == "Rooster toevoegen":
             st.session_state.planning = pd.concat([st.session_state.planning, new_entry], ignore_index=True)
             update_planning_csv()  # Sla de planning op
             commit_and_push_changes("planning.csv")  # Push git
-            st.success("Planning toegevoegd!")
-            st.rerun()  # Herlaad de app om de lijst te updaten
+            st.success("Nieuw rooster toegevoegd!")  # Succesmelding
+            st.cache_data.clear()  # Herlaad de app om de lijst te updaten
 
 # Vrijdagrooster overzicht 
 elif st.session_state.page == "Vrijdagrooster overzicht":
@@ -162,59 +161,6 @@ elif st.session_state.page == "Vrijdagrooster overzicht":
     csv = convert_df(st.session_state.planning)
     st.download_button("📥 Download Planning", data=csv, file_name="planning.csv", mime='text/csv')
 
-# Aanwezigheid personen pagina
-elif st.session_state.page == "Aanwezigheid personen":
-    
-    # print(st.session_state.checkbox_checked)
-    # if len(st.session_state.checkbox_checked) == 0:
-    with open('aanwezigheid.json', 'r') as json_read_file:
-        # print(json_read_file)
-        # print(json.load(json_read_file))
-        # print(json.load(json_file))
-        checkbox_checked = json.load(json_read_file)
-
-    st.header("📝 Geef de aanwezigheid van personen aan")
-
-    #Controleer of er personen in de lijst staan
-    if st.session_state.personen.empty:
-        st.warning("Er zijn nog geen personen toegevoegd. Voeg eerst personen toe via de pagina 'Personenbeheer'.")
-    else:
-        # Gegevens ophalen van de planning
-        for idx_planning, row_planning in st.session_state.planning.iterrows():
-            st.write(f"{row_planning['Datum']} - {row_planning['Tijd']} - {row_planning['Beschrijving']}")
-
-            if not idx_planning in checkbox_checked:
-               checkbox_checked[idx_planning] = {}
-        
-            # Gegevens ophalen voor de personenlijst
-            for idx_personen, row_personen in st.session_state.personen.iterrows():
-                voornaam = row_personen['Voornaam']
-                nummer = row_personen['UUID-nummer']
-
-                # Unieke key voor de checkbox
-                checkbox_key = f"aanwezig_{nummer}_{idx_planning}"
-
-                # Maak de checkbox en voer de add_person functie uit bij wijziging
-                if not checkbox_key in checkbox_checked[idx_planning]:
-                   checkbox_checked[idx_planning][checkbox_key] = False
-
-               # if st.checkbox(f"{voornaam} aanwezig", key=checkbox_key, value=checkbox_checked[idx_planning][checkbox_key]):
-                  #  add_person(idx_planning, checkbox_key, checkbox_checked)
-              #  else:
-                 #   remove_person(idx_planning, checkbox_key, checkbox_checked)
-
-            st.session_state.planning.at[idx_planning, 'Aanwezigheid'] = sum(checkbox_checked[idx_planning].values())
-    
-        update_planning_csv()  # Update de CSV na het aanpassen van aanwezigheid
-
-        # Toon de bijgewerkte planning met aanwezigheid
-        st.dataframe(st.session_state.planning, hide_index=True)
-
-        
-        print(checkbox_checked.keys())
-        with open('aanwezigheid.json', 'w') as json_file:
-            json.dump(checkbox_checked, json_file, indent=4)
-
 # Personenbeheer
 elif st.session_state.page == "Personenbeheer":
     # Lees de bestaande personenlijst in
@@ -231,8 +177,7 @@ elif st.session_state.page == "Personenbeheer":
     if st.button("Toevoegen"):
         add_new_person(new_person)  # Update CSV
         commit_and_push_changes('personenbeheer.csv')  # Upload naar GIT
-
-        st.rerun()  # Herlaad de app
+        st.cache_data.clear()  # Herlaad de app
 
     # Verwijderen van een persoon
     remove_person = st.selectbox("Verwijder een persoon", st.session_state.personen['Voornaam'])
@@ -247,58 +192,58 @@ elif st.session_state.page == "Personenbeheer":
             commit_and_push_changes('personenbeheer.csv')
 
             st.success(f"{remove_person} verwijderd!")
-            st.rerun()  # Herlaad de app om de lijst te updaten
+            st.cache_data.clear()  # Herlaad de app om de lijst te updaten
+
 # Rooster bewerken
 elif st.session_state.page == "Rooster bewerken":
-     st.header("✏️ Bewerk of Verwijder een planning")
- 
-     # Controleer of er planningen zijn
-     if st.session_state.planning.empty:
-         st.write("🚫 Er zijn geen openstaande planningen om te bewerken.")
-     else:
-         # Kies een planning om te bewerken of verwijderen
-         planning_select = st.selectbox("Kies een planning", st.session_state.planning['Beschrijving'])
- 
-         # Vind de geselecteerde planning op basis van de beschrijving
-         planning_idx = st.session_state.planning[st.session_state.planning['Beschrijving'] == planning_select].index[0]
- 
-         # Haal de huidige waarden voor de geselecteerde planning
-         datum = pd.to_datetime(st.session_state.planning.at[planning_idx, 'Datum']).date()
-         tijd_value = st.session_state.planning.at[planning_idx, 'Tijd']
-         if isinstance(tijd_value, str):  # Als het een string is, converteer het naar time
-             tijd_value = pd.to_datetime(tijd_value).time()
-         tijd = st.time_input("Tijd", value=tijd_value)
-         taak = st.text_input("Beschrijving", value=st.session_state.planning.at[planning_idx, 'Beschrijving'])
-         adres = st.text_input("Adres", value=st.session_state.planning.at[planning_idx, 'Adres'])
- 
-         # Als de gebruiker de gegevens wijzigt, moeten we de DataFrame updaten
-         if st.button("Opslaan"):
-             # Werk de planning bij in de DataFrame
-             st.session_state.planning.at[planning_idx, 'Datum'] = datum
-             st.session_state.planning.at[planning_idx, 'Tijd'] = tijd
-             st.session_state.planning.at[planning_idx, 'Beschrijving'] = taak
-             st.session_state.planning.at[planning_idx, 'Adres'] = adres
- 
-             # Herbereken de aanwezigheid op basis van de nieuwe gegevens
-             #st.session_state.planning['Aanwezigheid'] = st.session_state.planning.apply(
-             #    lambda row: sum(st.session_state.checkbox_checked.get(row.name, {}).values()), axis=1
-             #) Deze functie telt de aanwezigheid en past dus de planning weer aan naar een aanwezigheidstelling
- 
-             # Sla de wijzigingen op in de CSV en update de GIT
-             update_planning_csv()
-             commit_and_push_changes('planning.csv')
- 
-             # Bevestigingsbericht
-             st.success(f"Planning '{taak}' is bewerkt!")
-             st.rerun()  # Herlaad de app om de lijst te updaten
- 
-         # Verwijder planning
-         if st.button("Verwijder deze planning"):
-             # Verwijder de geselecteerde planning uit de DataFrame
-             st.session_state.planning = st.session_state.planning[st.session_state.planning['Beschrijving'] != planning_select]
- 
-             # Update de CSV en GIT
-             update_planning_csv()
-             commit_and_push_changes("planning.csv")
-             st.success(f"Planning '{planning_select}' verwijderd!")
-             st.rerun()  # Herlaad de app om de lijst te updaten
+    st.header("✏️ Bewerk of Verwijder een planning")
+
+    # Controleer of er planningen zijn
+    if st.session_state.planning.empty:
+        st.write("🚫 Er zijn geen openstaande planningen om te bewerken.")
+    else:
+        # Kies een planning om te bewerken of verwijderen
+        planning_select = st.selectbox("Kies een planning", st.session_state.planning['Beschrijving'])
+
+        # Vind de geselecteerde planning op basis van de beschrijving
+        planning_idx = st.session_state.planning[st.session_state.planning['Beschrijving'] == planning_select].index[0]
+
+        # Haal de huidige waarden voor de geselecteerde planning
+        datum = pd.to_datetime(st.session_state.planning.at[planning_idx, 'Datum']).date()
+        tijd_value = st.session_state.planning.at[planning_idx, 'Tijd']
+        if isinstance(tijd_value, str):  # Als het een string is, converteer het naar time
+            tijd_value = pd.to_datetime(tijd_value).time()
+        tijd = st.time_input("Tijd", value=tijd_value)
+        taak = st.text_input("Beschrijving", value=st.session_state.planning.at[planning_idx, 'Beschrijving'])
+        adres = st.text_input("Adres", value=st.session_state.planning.at[planning_idx, 'Adres'])
+
+        # Als de gebruiker de gegevens wijzigt, moeten we de DataFrame updaten
+        if st.button("Opslaan"):
+            # Werk de planning bij in de DataFrame
+            st.session_state.planning.at[planning_idx, 'Datum'] = datum
+            st.session_state.planning.at[planning_idx, 'Tijd'] = tijd
+            st.session_state.planning.at[planning_idx, 'Beschrijving'] = taak
+            st.session_state.planning.at[planning_idx, 'Adres'] = adres
+
+            # Sla de wijzigingen op in de CSV en update de GIT
+            update_planning_csv()
+            commit_and_push_changes('planning.csv')
+
+            # Bevestigingsbericht
+            st.success(f"Rooster is bewerkt!")
+
+            # Laat de mogelijkheid om direct een andere planning te bewerken
+            st.cache_data.clear()  # Herlaad de app om de lijst te updaten
+
+        # Verwijder planning
+        if st.button("Verwijder deze planning"):
+            # Verwijder de geselecteerde planning uit de DataFrame
+            st.session_state.planning = st.session_state.planning[st.session_state.planning['Beschrijving'] != planning_select]
+
+            # Update de CSV en GIT
+            update_planning_csv()
+            commit_and_push_changes("planning.csv")
+            st.success(f"Rooster is verwijderd!")
+
+            # Laat de mogelijkheid om direct een andere planning te bewerken of verwijderen
+            st.cache_data.clear()  # Herlaad de app om de lijst te updaten
