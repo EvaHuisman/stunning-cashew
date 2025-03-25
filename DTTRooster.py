@@ -94,15 +94,12 @@ if not check_password():
 # Sidebar navigatie
 st.sidebar.image("DTT-logo.png", width=175)
 st.sidebar.title("Menu")
-st.session_state.page = st.sidebar.radio("Ga naar", ["Vrijdagrooster overzicht", "Rooster toevoegen", "Rooster bewerken", "Personenbeheer"]) #"Aanwezigheid personen"
+st.session_state.page = st.sidebar.radio("Ga naar", ["Vrijdagrooster overzicht", "Rooster toevoegen", "Rooster bewerken", "Personenbeheer"])
 
 # Functie om de aanwezigheid bij te werken
-#def add_person(idx_planning, checkbox_key, checkbox_checked):
-#    """Update de aanwezigheid op basis van de checkbox status.""" 
-#    checkbox_checked[idx_planning][checkbox_key] = True
-
-#def remove_person(idx_planning, checkbox_key, checkbox_checked):
-#     checkbox_checked[idx_planning][checkbox_key] = False
+def add_person(idx_planning, checkbox_key, checkbox_checked):
+    """Update de aanwezigheid op basis van de checkbox status.""" 
+    checkbox_checked[idx_planning][checkbox_key] = True
 
 # Toevoegen van een nieuwe persoon
 def add_new_person(new_person):
@@ -120,7 +117,7 @@ def add_new_person(new_person):
             # Update de CSV
             update_personen_csv()
             st.success(f"{new_person} toegevoegd!") # Succesbericht na toevoegen van de persoon
-            st.cache_data.clear()  # Herlaad de app om de lijst te updaten
+            commit_and_push_changes('personenbeheer.csv')  # Upload naar GIT
         else:
             st.warning("Deze persoon bestaat al.") # Waarschuwing als de persoon al bestaat
     else:
@@ -143,7 +140,7 @@ if st.session_state.page == "Rooster toevoegen":
             update_planning_csv()  # Sla de planning op
             commit_and_push_changes("planning.csv")  # Push git
             st.success("Nieuw rooster toegevoegd!")  # Succesmelding
-            st.cache_data.clear()  # Herlaad de app om de lijst te updaten
+            st.session_state.page = "Vrijdagrooster overzicht"  # Forceer herladen van de pagina
 
 # Vrijdagrooster overzicht 
 elif st.session_state.page == "Vrijdagrooster overzicht":
@@ -176,15 +173,13 @@ elif st.session_state.page == "Personenbeheer":
     new_person = st.text_input("Voeg een nieuwe persoon toe")
     if st.button("Toevoegen"):
         add_new_person(new_person)  # Update CSV
-        commit_and_push_changes('personenbeheer.csv')  # Upload naar GIT
-        st.cache_data.clear()  # Herlaad de app
+        st.session_state.page = "Personenbeheer"  # Forceer herladen van de pagina
 
     # Verwijderen van een persoon
     remove_person = st.selectbox("Verwijder een persoon", st.session_state.personen['Voornaam'])
     if st.button("Verwijderen"):
         if remove_person:
             # Verwijder de persoon uit de DataFrame
-            voornaam, achternaam = remove_person.split(" ")[0], " ".join(remove_person.split(" ")[1:])
             st.session_state.personen = st.session_state.personen[st.session_state.personen['Voornaam'] != remove_person]
 
             # Update de CSV en GIT
@@ -192,7 +187,7 @@ elif st.session_state.page == "Personenbeheer":
             commit_and_push_changes('personenbeheer.csv')
 
             st.success(f"{remove_person} verwijderd!")
-            st.cache_data.clear()  # Herlaad de app om de lijst te updaten
+            st.session_state.page = "Personenbeheer"  # Forceer herladen van de pagina
 
 # Rooster bewerken
 elif st.session_state.page == "Rooster bewerken":
@@ -232,8 +227,8 @@ elif st.session_state.page == "Rooster bewerken":
             # Bevestigingsbericht
             st.success(f"Rooster is bewerkt!")
 
-            # Laat de mogelijkheid om direct een andere planning te bewerken
-            st.cache_data.clear()  # Herlaad de app om de lijst te updaten
+            # Direct de wijzigingen weergeven
+            st.session_state.page = "Vrijdagrooster overzicht"  # Forceer herladen van de pagina
 
         # Verwijder planning
         if st.button("Verwijder deze planning"):
@@ -245,5 +240,5 @@ elif st.session_state.page == "Rooster bewerken":
             commit_and_push_changes("planning.csv")
             st.success(f"Rooster is verwijderd!")
 
-            # Laat de mogelijkheid om direct een andere planning te bewerken of verwijderen
-            st.cache_data.clear()  # Herlaad de app om de lijst te updaten
+            # Direct de wijzigingen weergeven
+            st.session_state.page = "Vrijdagrooster overzicht"  # Forceer herladen van de pagina
