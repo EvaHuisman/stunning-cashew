@@ -68,6 +68,9 @@ def init_state():
     if 'person_added' not in st.session_state:
         st.session_state['person_added'] = False  # Indicator voor of een persoon toegevoegd is
 
+    if 'planning_updated' not in st.session_state:
+        st.session_state['planning_updated'] = False  # Indicator voor of een planning is bewerkt of verwijderd
+
 init_state()
 
 # Wachtwoordcontrole
@@ -135,7 +138,7 @@ def add_new_person(new_person):
 
 # Verwijderen van een persoon
 def remove_person_from_list(person_name):
-    """Verwijdert een persoon op basis van de voornaam uit de lijst."""
+    """Verwijdert een persoon op basis van de voornaam uit de lijst.""" 
     if person_name:
         # Verwijder de persoon uit de DataFrame
         st.session_state.personen = st.session_state.personen[st.session_state.personen['Voornaam'] != person_name]
@@ -253,11 +256,12 @@ elif st.session_state.page == "Rooster bewerken":
             update_planning_csv()
             commit_and_push_changes('planning.csv')
 
-            # Bevestigingsbericht
-            st.success(f"Rooster is bewerkt!")
+            # Zet de flag dat de planning is bijgewerkt
+            st.session_state['planning_updated'] = f"Rooster '{taak}' is bewerkt!"
 
             # Direct de wijzigingen weergeven
             st.session_state.page = "Vrijdagrooster overzicht"  # Forceer herladen van de pagina
+            st.rerun()  # Herstart de pagina zodat de verandering zichtbaar is
 
         # Verwijder planning
         if st.button("Verwijder deze planning"):
@@ -267,7 +271,15 @@ elif st.session_state.page == "Rooster bewerken":
             # Update de CSV en GIT
             update_planning_csv()
             commit_and_push_changes("planning.csv")
-            st.success(f"Rooster is verwijderd!")
+
+            # Zet de flag dat de planning is verwijderd
+            st.session_state['planning_updated'] = f"Rooster '{planning_select}' is verwijderd!"
 
             # Direct de wijzigingen weergeven
             st.session_state.page = "Vrijdagrooster overzicht"  # Forceer herladen van de pagina
+            st.rerun()  # Herstart de pagina zodat de verandering zichtbaar is
+
+# Na het herladen van de pagina wordt de update-melding getoond
+if st.session_state.get('planning_updated', False):
+    st.success(st.session_state['planning_updated'])
+    st.session_state['planning_updated'] = False  # Reset de melding
