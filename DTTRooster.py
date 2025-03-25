@@ -54,7 +54,7 @@ def init_state():
         try:
             st.session_state.planning = pd.read_csv("planning.csv")
         except FileNotFoundError:
-            st.session_state.planning = pd.DataFrame(columns=['Datum', 'Tijd', 'Beschrijving', 'Adres', 'Aanwezigheid'], index=None)
+            st.session_state.planning = pd.DataFrame(columns=['Datum', 'Tijd', 'Beschrijving', 'Adres'], index=None)
     if 'personen' not in st.session_state:
         try:
             st.session_state.personen = pd.read_csv("personenbeheer.csv")
@@ -98,12 +98,12 @@ st.sidebar.title("Menu")
 st.session_state.page = st.sidebar.radio("Ga naar", ["Vrijdagrooster overzicht", "Rooster toevoegen", "Rooster bewerken", "Personenbeheer"]) #"Aanwezigheid personen"
 
 # Functie om de aanwezigheid bij te werken
-def add_person(idx_planning, checkbox_key, checkbox_checked):
-    """Update de aanwezigheid op basis van de checkbox status."""
-    checkbox_checked[idx_planning][checkbox_key] = True
+#def add_person(idx_planning, checkbox_key, checkbox_checked):
+#    """Update de aanwezigheid op basis van de checkbox status."""
+#    checkbox_checked[idx_planning][checkbox_key] = True
 
-def remove_person(idx_planning, checkbox_key, checkbox_checked):
-     checkbox_checked[idx_planning][checkbox_key] = False
+#def remove_person(idx_planning, checkbox_key, checkbox_checked):
+#     checkbox_checked[idx_planning][checkbox_key] = False
 
 # Toevoegen van een nieuwe persoon
 def add_new_person(new_person):
