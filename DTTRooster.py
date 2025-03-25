@@ -56,9 +56,10 @@ def init_state():
             st.session_state.planning = pd.DataFrame(columns=['Datum', 'Tijd', 'Beschrijving', 'Adres'], index=None)
     if 'personen' not in st.session_state:
         try:
+            # Zorg ervoor dat er geen 'Achternaam' kolom is
             st.session_state.personen = pd.read_csv("personenbeheer.csv")
         except FileNotFoundError:
-            st.session_state.personen = pd.DataFrame(columns=['Voornaam', 'Achternaam', 'UUID-nummer'], index=None)
+            st.session_state.personen = pd.DataFrame(columns=['Voornaam', 'UUID-nummer'], index=None)  # Alleen voornaam en UUID
     if 'page' not in st.session_state:
         st.session_state.page = "Vrijdagrooster overzicht"  # Standaard pagina instellen
     if 'checkbox_checked' not in st.session_state:
@@ -110,9 +111,9 @@ def add_new_person(new_person):
     if new_person:
         # Controleer of de persoon al bestaat
         if new_person not in st.session_state.personen['Voornaam'].values:
-            # Nieuwe persoon toevoegen als DataFrame-rij
+            # Nieuwe persoon toevoegen als DataFrame-rij (zonder achternaam)
             voornaam = new_person.strip()
-            new_person_data = pd.DataFrame([[voornaam, "", uuid.uuid4()]], columns=['Voornaam', 'Achternaam', 'UUID-nummer'])
+            new_person_data = pd.DataFrame([[voornaam, uuid.uuid4()]], columns=['Voornaam', 'UUID-nummer'])
 
             # Voeg de nieuwe persoon toe aan de DataFrame
             st.session_state.personen = pd.concat([st.session_state.personen, new_person_data], ignore_index=True)
