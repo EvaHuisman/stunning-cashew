@@ -143,7 +143,7 @@ if st.session_state.page == "Rooster toevoegen":
             st.session_state.planning = pd.concat([st.session_state.planning, new_entry], ignore_index=True)
             update_planning_csv()  # Sla de planning op
             commit_and_push_changes("planning.csv")  # Push git
-            st.success("Planning toegevoegd!")
+            st.session_state.success_message = "Planning toegevoegd!"
             st.rerun()  # Herlaad de app om de lijst te updaten
 
 # Vrijdagrooster overzicht 
@@ -253,7 +253,7 @@ elif st.session_state.page == "Rooster bewerken":
          st.write("🚫 Er zijn geen openstaande planningen om te bewerken.")
      else:
          # Kies een planning om te bewerken of verwijderen
-         planning_select = st.selectbox("Kies een planning", st.session_state.planning['Beschrijving'])
+         planning_select = st.selectbox("Kies seen planning", st.session_state.planning['Beschrijving'])
  
          # Vind de geselecteerde planning op basis van de beschrijving
          planning_idx = st.session_state.planning[st.session_state.planning['Beschrijving'] == planning_select].index[0]
@@ -285,7 +285,7 @@ elif st.session_state.page == "Rooster bewerken":
              commit_and_push_changes('planning.csv')
  
              # Bevestigingsbericht
-             st.success(f"Planning '{taak}' is bewerkt!")
+             st.session_state.success_message = f"Planning '{taak}' is bewerkt!"
              st.rerun()  # Herlaad de app om de lijst te updaten
  
          # Verwijder planning
@@ -296,5 +296,10 @@ elif st.session_state.page == "Rooster bewerken":
              # Update de CSV en GIT
              update_planning_csv()
              commit_and_push_changes("planning.csv")
-             st.success(f"Planning '{planning_select}' verwijderd!")
+             st.session_state.success_message = f"Planning '{planning_select}' verwijderd!"
              st.rerun()  # Herlaad de app om de lijst te updaten
+
+# Hier toon je de melding na een herlaad:
+if 'success_message' in st.session_state:
+    st.success(st.session_state.success_message)
+    del st.session_state.success_message  # Verwijder de melding na weergave
